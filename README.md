@@ -28,3 +28,16 @@ Create connections between your favorite tools and build automated workflows vis
 
 **THE WORKFLOW CAN BE ADOPTED TO MULTIPLE USE CASES BY CHANGING THE DATA SOURCE AND DESTINATION NODES**
 
+
+## **Installation**
+There are two ways to install or use the n8n.
+First is cloud interface which is on browser, that's a paid service after 14 days trial.
+Second one is completely free which is on localhost, but there are some limitation , as we are not able to share our localhost work
+to everyone.
+If you are someone who wants to learn n8n use second way.
+For that you need to install node in your device first.
+Download link for node : ```https://nodejs.org/en/download```
+Install it in your device.
+
+After installing open cmd or command prompt and write following code:-
+```npm install g- n8n```
