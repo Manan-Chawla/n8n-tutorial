@@ -36,8 +36,22 @@ Second one is completely free which is on localhost, but there are some limitati
 to everyone.
 If you are someone who wants to learn n8n use second way.
 For that you need to install node in your device first.
+
 Download link for node : ```https://nodejs.org/en/download```
 Install it in your device.
 
+
 After installing open cmd or command prompt and write following code:-
 ```npm install g- n8n```
+
+Now, wait for 5-10 mins, as it will download many packages.
+
+Now we need to login in or sign up for n8n, as soon the downloading finish.
+Write code :- 
+```n8n start```
+
+When it run first time it will create or sign in your n8n accont and provide you a activation key on gmail. Use that key and paste in the login page.
+Your localhost n8n is setup.
+
+To run the n8n, locally always open cmd and write 'n8n start' to start the application locally.
+
