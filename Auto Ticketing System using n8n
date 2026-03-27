@@ -1,0 +1,102 @@
+# 🛠️ Building an Automated Support Ticket System
+### Bridge the Gap: From User Error to HubSpot Ticket using n8n
+
+This guide will teach you how to build an automated "pipeline." When a user has a problem on your website (SaaS), they send a report. That report is instantly captured by **n8n** (the brain) and sent to **HubSpot** (the organizer) as a support ticket for your developers to fix.
+
+---
+
+## 📖 Key Concepts for Beginners
+* **n8n:** A workflow automation tool that lets you connect different apps (like a "digital glue").
+* **Webhook:** A "listener" URL. When you send data to this URL, it triggers the automation to start.
+* **POST Request:** A way of sending data (like a filled-out form) over the internet.
+* **CRM (HubSpot):** A tool where companies manage customer interactions and support tickets.
+
+---
+
+## 🛠️ Step 1: Create the "Listener" (Webhook Node)
+The Webhook is the first part of your workflow. It waits for data to arrive from your website.
+
+1.  **Add Node:** Open n8n, click the **'+'** (Add Node) button in the top right.
+2.  **Search:** Type `Webhook` and select it.
+3.  **Configure the Settings:**
+    * **Authentication:** `None` (for this local test).
+    * **HTTP Method:** `POST` (This means we are "posting" or sending data to it).
+    * **Path:** `create-ticket` (This creates your unique URL).
+    * **Response Mode:** `When Last Node Finishes` (This tells the user "We got it!" only after the ticket is created).
+4.  **The Test URL:** Look at the top of the node settings. You will see a **Test URL**. It usually looks like: `http://localhost:5678/webhook-test/create-ticket`.
+
+> **How to Test:** > 1. Click **Execute Workflow** at the bottom of the screen. n8n is now "listening."
+> 2. Open your Windows Command Prompt (**Win + R**, then type `cmd`).
+> 3. Copy and paste this command to simulate a user sending an error:
+> ```bash
+> curl -X POST http://localhost:5678/webhook-test/create-ticket ^
+> -H "Content-Type: application/json" ^
+> -d "{\"email\":\"user@gmail.com\",\"subject\":\"Login Issue\",\"message\":\"Unable to login\"}"
+> ```
+> *If successful, the node in n8n will turn green!*
+
+---
+
+## 🔐 Step 2: Prepare HubSpot (Private App)
+n8n needs a "key" to enter your HubSpot account. We create this using a "Private App."
+
+1.  Log in to [HubSpot](https://www.hubspot.com).
+2.  Click the **Settings (Gear Icon)** in the top right.
+3.  On the left sidebar, go to **Integrations > Private Apps**.
+4.  Click **Create Private App**.
+    * **Tab 1 (Basic Info):** Name it `n8n Ticket Integration`.
+    * **Tab 2 (Scopes):** This is where you give permission. Search for `tickets`.
+    * Check the boxes for `crm.objects.tickets.read` and `crm.objects.tickets.write`.
+5.  **Click "Create App"** in the top right. 
+6.  A window will pop up with your **Access Token**. Click **Show Token** and **Copy** it. Store this safely!
+
+---
+
+## 🤖 Step 3: Connect n8n to HubSpot
+Now we tell n8n where to put the data it received from the Webhook.
+
+1.  In n8n, click the **'+'** after your Webhook node.
+2.  Search for **HubSpot** and select it.
+3.  **Credential Setup:**
+    * Click the dropdown and select **Create New Credential**.
+    * Choose **Access Token (Private App)**.
+    * Paste the **Access Token** you copied from HubSpot. Click **Save**.
+4.  **Node Configuration:**
+    * **Resource:** `Ticket`
+    * **Operation:** `Create`
+    * **Ticket Name:** Click the expression icon `(</>)` or the cog wheel and select **Expression**. Drag and drop the `subject` from your Webhook data. It should look like `{{ $json.body.subject }}`.
+    * **Additional Fields:** Click **Add Property** and find **Description**. Use an expression to drag the `message` from your Webhook.
+
+---
+
+## 🏁 Step 4: Confirming Receipt (Respond to Webhook)
+We want to tell the user's computer that everything worked perfectly.
+
+1.  Click the **'+'** after the HubSpot node.
+2.  Search for **Respond to Webhook**.
+3.  **Respond With:** `First Incoming Item`.
+4.  This will send a "200 OK" message back to the website.
+
+---
+
+## ⚠️ Important: The "Manual Kickstart"
+Sometimes HubSpot's API won't recognize a new pipeline until it has been used once manually.
+
+1.  Go to HubSpot -> **Service** -> **Tickets**.
+2.  Click **Create Ticket** manually.
+3.  Fill in: Name (`Test`), Description (`Test`), and Priority (`High`).
+4.  Once saved, HubSpot is "awake" and ready for your n8n automation.
+
+---
+
+## ✅ Final Test Run
+1.  In n8n, click **Execute Workflow**.
+2.  Go back to your **CMD** (Command Prompt).
+3.  Press the **Up Arrow** key to find your previous `curl` command and press **Enter**.
+4.  **Check the results:**
+    * In n8n: All nodes should have green checkmarks.
+    * In HubSpot: Refresh your Tickets page. You should see a brand new ticket titled **"Login Issue"**!
+
+---
+
+**Next Steps:** Would you like me to help you add an **Email Node**? This would allow you to automatically email the user a "Ticket Number" as soon as the HubSpot ticket is created.
