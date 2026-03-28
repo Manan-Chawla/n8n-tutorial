@@ -1,0 +1,104 @@
+# GitHub Workflow Automation in n8n
+
+This project demonstrates how to create an automated pipeline in **n8n** that fetches repository metadata from **GitHub**, sends it to an external API (via Webhook), and logs the data into an internal **n8n Data Table**.
+
+---
+
+## 1. Prerequisites: GitHub Authentication
+
+To allow n8n to communicate with your GitHub account, you must generate a **Personal Access Token (Classic)**.
+
+1. Log in to [GitHub](https://github.com).
+2. Navigate to **Settings** > **Developer Settings**.
+3. Select **Personal access tokens** > **Tokens (classic)**.
+4. Click **Generate new token** > **Generate new token (classic)**.
+5. **Note:** Enter a name like `n8n-repo-fetcher`.
+6. **Expiration:** Set according to your security preference.
+7. **Scopes:** Ensure the `repo` scope is checked.
+8. Click **Generate token** and **copy the string immediately**. You will not be able to see it again.
+
+---
+
+## 2. Setting Up the n8n Workflow
+
+### Step 1: Initialize the Trigger
+1. Open your n8n instance and create a new workflow titled **"GitHub Workflow in n8n"**.
+2. Click the **+** button and search for the **Manual Trigger** node. This allows you to run the process manually for testing.
+
+### Step 2: Configure the GitHub Node
+1. Add the **GitHub** node after the Manual Trigger.
+2. **Credentials:** Create a new credential and paste your **GitHub Classic Token**.
+3. **Parameters:**
+   - **Resource:** Repository
+   - **Operation:** Get
+   - **Repository Owner:** Enter your GitHub username.
+   - **Repository Name:** Select the specific repository you wish to track.
+4. Click **Execute Node** to verify that n8n can successfully pull your repository details.
+
+---
+
+## 3. Configuring the External API (Webhook.site)
+
+Before adding the next node, we need a destination for our data.
+
+1. Go to [Webhook.site](https://webhook.site/).
+2. Copy the unique URL provided under **"Your unique URL"**.
+3. Keep this browser tab open; it will act as your external API monitor.
+
+---
+
+## 4. Data Integration and Storage
+
+### Step 3: Add the HTTP Request Node
+This node pushes specific repository data to your external API.
+
+1. Add the **HTTP Request** node after the GitHub node.
+2. **Parameters:**
+   - **Method:** POST
+   - **URL:** Paste the URL from Webhook.site.
+   - **Send Body:** Toggle to **ON**.
+   - **Body Content Type:** JSON.
+   - **Specify Body:** Using JSON.
+3. **JSON Body Mapping:** Paste the following code to map the GitHub data:
+```json
+{
+  "repo_name": "{{ $json.name }}",
+  "repo_url": "{{ $json.html_url }}",
+  "visibility": "{{ $json.visibility }}"
+}
+
+Step 4: Internal Data Table Persistence
+To keep a record within n8n, we will store the data in a localized table.
+
+In the n8n sidebar, go to Data Tables.
+
+Create a new table named github-data.
+
+Create three columns with the type String:
+
+repo_name
+
+repo_url
+
+visibility
+
+Return to your workflow and add the Data Table node at the end.
+
+Parameters:
+
+Resource: Row
+
+Operation: Insert
+
+Data Table: Select github-data.
+
+Mapping: Select Map each column manually.
+
+Values to Insert: Drag the name, html_url, and visibility fields from the GitHub node into their corresponding columns.
+
+5. Execution and Validation
+Click Execute Workflow at the bottom of the n8n screen.
+
+Verify External API: Check your Webhook.site tab. You should see a successful POST request with the JSON payload.
+
+Verify Internal Storage: Open the github-data table in n8n to ensure the row has been added correctly.
