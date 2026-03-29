@@ -1,0 +1,147 @@
+Let's create a automation where user have to send a GET or POST request in order to get the news of the following city he or she entered.
+
+# webhook node
+1. open n8n
+2. create new workflow
+3. click on '+' button and search for webhook node
+4. configure node :-
+method : POST
+path : news-bot
+5. test this node , click on execute workflow
+6. open cmd and write following
+curl -X POST http://localhost:5678/webhook-test/news-bot -H "Content-Type: application/json" -d "{\"message\":\"Jaipur news\"}"
+
+
+# gemini node 
+1, click on '+' node and search for gemini > message a model node
+2. configure it 
+Credential :- enter your by getting api key from ai studio google
+resource : text
+opeartion : message a model 
+model : gemini 2.5 flash
+message > propmt > enter this --> Extract only the city name from this text: {{$json.body.message}}. Only return city name.
+tick simplify output
+
+# JS function
+1. click on '+' button and search for function > select javascript function
+2. Mode : run once for all items
+3. in code write this :
+let city = $json.content.parts[0].text;
+
+return [
+  {
+    city: city.trim()
+  }
+];
+
+
+# gnews with http node
+1. first go to website gnews.io
+2. sign up and get a api key , copy that
+3. come to n8n again
+4. click on '+' and search for http request 
+5. configure node :- 
+method :  get 
+url : https://gnews.io/api/v4/search?q={{$json.city}}&token=7b8b31ef4e67173085114d33a5d28e28&lang=en
+for u , have to change the value after '=' and before '&' , that the api key we get from gnews
+
+
+# another funtion 
+1. click on '+' button
+2. click on function in search bar and select js function
+3. write code below:-
+let articles = $json.articles;
+
+return articles.map(item => {
+  return {
+    city: $json.city,
+    title: item.title,
+    description: item.description,
+    url: item.url
+  };
+});
+
+
+# next function 
+1. click on '+' button
+2. create another js function
+3. write code below :- 
+let html = `
+<html>
+<head>
+  <title>News</title>
+</head>
+<body style="font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; margin:0;">
+
+<h1 style="text-align:center; color:#333;">
+  📰 Latest News - ${items[0].json.city}
+</h1>
+
+<div style="max-width:800px; margin:auto;">
+`;
+
+items.forEach(item => {
+  html += `
+  <div style="
+    background:white;
+    padding:20px;
+    margin:15px 0;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  ">
+    
+    <h2 style="margin:0 0 10px 0; color:#222;">
+      ${item.json.title}
+    </h2>
+
+    <p style="color:#555; line-height:1.5;">
+      ${item.json.description || "No description available"}
+    </p>
+
+    <a href="${item.json.url}" target="_blank" 
+       style="
+         display:inline-block;
+         margin-top:10px;
+         padding:8px 12px;
+         background:#007bff;
+         color:white;
+         text-decoration:none;
+         border-radius:6px;
+         font-size:14px;
+       ">
+       Read More →
+    </a>
+
+  </div>
+  `;
+});
+
+html += `
+</div>
+
+</body>
+</html>
+`;
+
+return [
+  {
+    html: html
+  }
+];
+
+
+# last node
+1. click on    '+' node
+2. search for convert file > conver to html
+
+
+
+
+
+
+
+now how to test it
+1. click on exectue workflow 
+2. open cmd and write code below 
+curl -X POST http://localhost:5678/webhook-test/news-bot -H "Content-Type: application/json" -d "{\"message\":\"Jaipur news\"}"
+3. open last node and click on download button to download the file of html
