@@ -42,7 +42,7 @@ Install it in your device.
 
 
 After installing open cmd or command prompt and write following code:-
-```npm install g- n8n```
+```npm install -g n8n```
 
 Now, wait for 5-10 mins, as it will download many packages.
 
